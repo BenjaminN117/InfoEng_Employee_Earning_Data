@@ -49,9 +49,9 @@ class Employee_Earnings():
                 # Empty the temporary dataframe before the next iteration
                 df_subset_temp = df_subset_temp[0:0]
         
-        ceoSalary = df_subset_final[df_subset_final['jobType'] == "SENIOR"]['salary']
+        seniorSalary = df_subset_final[df_subset_final['jobType'] == "SENIOR"]['salary']
         juniorSalary = df_subset_final[df_subset_final['jobType'] == "JUNIOR"]['salary']
-        cfoSalary = df_subset_final[df_subset_final['jobType'] == "JANITOR"]['salary']
+        janitorSalary = df_subset_final[df_subset_final['jobType'] == "JANITOR"]['salary']
 
         
         x = np.arange(len(listOfIndustries))
@@ -59,9 +59,9 @@ class Employee_Earnings():
 
         fig, ax = plt.subplots()
         
-        bar1= ax.bar(x, ceoSalary, width, label='SENIOR')
+        bar1= ax.bar(x, seniorSalary, width, label='SENIOR')
         bar2= ax.bar(x + width, juniorSalary, width, label='JUNIOR')
-        bar3= ax.bar(x + width*2, cfoSalary, width, label='JANITOR')
+        bar3= ax.bar(x + width*2, janitorSalary, width, label='JANITOR')
         
         ax.set_xticks(x+width, listOfIndustries)
         ax.set_xticklabels(listOfIndustries)
