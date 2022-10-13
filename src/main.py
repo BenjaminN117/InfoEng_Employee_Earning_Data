@@ -1,8 +1,9 @@
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 class Employee_Earnings():
-    def __init__(self) -> None:
+    def __init__(self):
         self.csvFilepath1 = "./dataset/batch1_jobID_00A32TE.csv"
         self.csvFilepath2 = "./dataset/batch2_jobID_00B80TR.csv"
     def db_import(self):
@@ -13,81 +14,62 @@ class Employee_Earnings():
         df2 = pd.read_csv(self.csvFilepath2)
         
         self.df = pd.concat([df1, df2])
-        #self.df.info()
-        #print(self.df.head(10))
         
     def df_cleaning(self):
         '''
         Cleans the dataframe ready for analysis
         '''
         # Checks for missing values in the df
-        #print(self.df.isnull().sum())        
+        print(self.df.isnull().sum())        
         
         # Removes the companyId row from the dataframe
         del self.df["companyId"]
-        #print(self.df.head(10))
-
-        ##df_subset = self.df.loc[(self.df['companyId'] == 'COMP1') & (self.df['jobType'] == 'CEO')]
-        #print(df_subset)
+        
+        ## Creates a subset dataframe ##
+        
+        # Remove rows that have no salary information
+        self.df_subset_Nnull = self.df.loc[self.df["salary"].notnull()]
+        # Remove the 'degree', 'major' and milesFromMetropolis columns
+        del self.df_subset_Nnull['degree'], self.df_subset_Nnull["major"], self.df_subset_Nnull["milesFromMetropolis"]
+   
+   
     def df_analysis(self):
-        
-        '''
-        Question: Which industries job see the fastest scaling pay rate vs years experience?
-        
-        New Question: Pay difference for CEOs in each industry
-        
-        Measuring pay rate with years experience = Industry name
-        1) Exclude any data that has no salary using a subset dataframe
-        2) calculate years experience range for each industry and pick the largest range as the base
-        3) calculate pay range for each job type in an industry
-        
-        1) For each type of job in an industry average out the salary and the years experience
-        
-        X axis = Years experience
-        
-        y axis = Salary
-        
-        Each graph is for a specific job type
-        
-        '''
-        df_subset_Nnull = self.df.loc[self.df["salary"].notnull()]
-        del df_subset_Nnull['degree'], df_subset_Nnull["major"], df_subset_Nnull["milesFromMetropolis"]
-    
-        listOfIndustries = df_subset_Nnull.industry.unique()
-        listOfJobs = df_subset_Nnull.jobType.unique()
-
-        df_subset_final = df_subset_Nnull[0:0] 
-        
+        # Add the Industries and Job types to a list
+        listOfIndustries = self.df_subset_Nnull.industry.unique()
+        listOfJobs = self.df_subset_Nnull.jobType.unique()
+        # Create a blank subset dataframe while using the headers from the main subset
+        df_subset_final = self.df_subset_Nnull[0:0] 
+        ## Average out all of the job types and industries so their is only one entry for each and apply that to df_subset_final ##
         for industry in listOfIndustries:
             for job in listOfJobs:
                 # Add all of the rows to a dataframe that contain the same industry and job
-                df_subset_temp = df_subset_Nnull.loc[(df_subset_Nnull["jobType"] == job) & (df_subset_Nnull["industry"] == industry)]
-               # print(df_subset_temp.head(5))
+                df_subset_temp = self.df_subset_Nnull.loc[(self.df_subset_Nnull["jobType"] == job) & (self.df_subset_Nnull["industry"] == industry)]
                 # Average the salary and years experience and add it to another data frame
                 df_subset_final = df_subset_final.append({'jobType':job, 'industry':industry, 'yearsExperience':round(df_subset_temp["yearsExperience"].mean(), 1), 'salary':round(df_subset_temp["salary"].mean(), 1)}, ignore_index=True)
-                #print(df_subset_final.head(10))
                 # Empty the temporary dataframe before the next iteration
                 df_subset_temp = df_subset_temp[0:0]
-                #print(df_subset_temp.head(5))
-                
-        # fig, ax = plt.subplots()
-        # ax.set_xlim()
         
-        ceoSalary = df_subset_final[df_subset_final['jobType'] == "CEO"]['salary']
-        industryName = df_subset_final[df_subset_final['jobType'] == "CEO"]['industry']
+        ceoSalary = df_subset_final[df_subset_final['jobType'] == "SENIOR"]['salary']
+        juniorSalary = df_subset_final[df_subset_final['jobType'] == "JUNIOR"]['salary']
+        cfoSalary = df_subset_final[df_subset_final['jobType'] == "JANITOR"]['salary']
+
         
-        '''
-        X axis = Industries
-        Y axis = Salary
-        '''
+        x = np.arange(len(listOfIndustries))
+        width = 0.25
+
+        fig, ax = plt.subplots()
         
-        plt.bar(industryName, ceoSalary)
+        bar1= ax.bar(x, ceoSalary, width, label='SENIOR')
+        bar2= ax.bar(x + width, juniorSalary, width, label='JUNIOR')
+        bar3= ax.bar(x + width*2, cfoSalary, width, label='JANITOR')
+        
+        ax.set_xticks(x+width, listOfIndustries)
+        ax.set_xticklabels(listOfIndustries)
+        ax.legend()
+        
         # Labels
         plt.xlabel("Industry")
-        plt.ylabel("Salary")
-        
-        plt.bar_label(plt.bar, padding=3)
-        
+        plt.ylabel("Salary")    
         
         plt.show()
         
